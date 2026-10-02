@@ -40,8 +40,13 @@ const Home = () => {
 
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [destinationSuggestions, setDestinationSuggestions] = useState([]);
+  const [suggestionError, setSuggestionError] = useState("");
+  const pickupSuggestionTimer = useRef(null);
+  const destinationSuggestionTimer = useRef(null);
   const [activeField, setActiveField] = useState(null);
   const [fare, setFare] = useState({});
+  const [fareLoading, setFareLoading] = useState(false);
+  const [fareError, setFareError] = useState("");
 
   const [vehicleType, setVehicleType] = useState(null);
 
@@ -73,44 +78,57 @@ const Home = () => {
     navigate("/riding", { state: { ride, vehicleType } }); // pass ride data here
   });
   
-  const handlePickupChange = async (e) => {
-    setPickup(e.target.value);
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/maps/get-suggestions`,
-        {
-          params: { input: e.target.value },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      // console.log(response.data);
-      setPickupSuggestions(response.data);
-    } catch (err) {
-      // handle error
-      // console.log(err);
+  function searchSuggestions(input, setSuggestions, timer) {
+    clearTimeout(timer.current);
+    const query = input.trim();
+    if (query.length < 3) {
+      setSuggestions([]);
+      setSuggestionError("");
+      return;
     }
+    if (
+      query.length > 120 ||
+      /react-dom|main\.js:|InvalidValueError|Google Maps JavaScript API/i.test(query)
+    ) {
+      setSuggestions([]);
+      setSuggestionError("Enter an address, not copied console output.");
+      return;
+    }
+
+    timer.current = setTimeout(async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/maps/get-suggestions`,
+          {
+            params: { input: query },
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        setSuggestions(response.data);
+        setSuggestionError("");
+      } catch {
+        setSuggestions([]);
+        setSuggestionError(
+          "Address search failed. Check Google Maps billing and Places API access."
+        );
+      }
+    }, 300);
+  }
+
+  const handlePickupChange = (e) => {
+    const input = e.target.value;
+    setPickup(input);
+    searchSuggestions(input, setPickupSuggestions, pickupSuggestionTimer);
   };
   function clickhandler() {
     // console.log("clicked");
   }
-  const handleDestinationChange = async (e) => {
-    setDestination(e.target.value);
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/maps/get-suggestions`,
-        {
-          params: { input: e.target.value },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      setDestinationSuggestions(response.data);
-    } catch {
-      // handle error
-    }
+  const handleDestinationChange = (e) => {
+    const input = e.target.value;
+    setDestination(input);
+    searchSuggestions(input, setDestinationSuggestions, destinationSuggestionTimer);
   };
 
   const findPanelRef = useRef(null);
@@ -246,20 +264,32 @@ const Home = () => {
       setLocationError("Pickup and destination cannot be the same");
       return;
     }
+    setFare({});
+    setFareError("");
+    setFareLoading(true);
     setVehiclePanel(true);
     setPanelOpen(false);
 
-    const response = await axios.get(
-      `${import.meta.env.VITE_BASE_URL}/rides/get-fare`,
-      {
-        params: { pickup, destination },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
-    setFare(response.data);
-    // console.log(response.data);
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/rides/get-fare`,
+        {
+          params: { pickup, destination },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setFare(response.data);
+    } catch (error) {
+      setFareError(
+        error.response?.data?.message ||
+          error.response?.data?.errors?.[0]?.msg ||
+          "Unable to calculate fares. Check the locations and try again."
+      );
+    } finally {
+      setFareLoading(false);
+    }
   }
   const [captainLocation, setCaptainLocation] = useState({});
 
@@ -345,6 +375,7 @@ const Home = () => {
             <input
               className="bg-[#eeeeee] px-12 py-2 text-base rounded-lg w-full mt-5"
               type="text"
+              maxLength={120}
               onClick={() => {
                 setPanelOpen(true);
                 setActiveField("pickup");
@@ -359,6 +390,7 @@ const Home = () => {
             <input
               className="bg-[#eeeeee] px-12 py-2 text-base rounded-lg w-full mt-3"
               type="text"
+              maxLength={120}
               onClick={() => {
                 setPanelOpen(true);
                 setActiveField("destination");
@@ -371,6 +403,11 @@ const Home = () => {
               placeholder="Enter your destination"
             />
             <p className="text-red-600 text-sm pl-2">{locationError}</p>
+            {suggestionError && (
+              <p role="alert" className="text-red-600 text-sm pl-2">
+                {suggestionError}
+              </p>
+            )}
           </form>
           <button
             onClick={findTrip}
@@ -404,6 +441,8 @@ const Home = () => {
       >
         <VehiclePanel
           fare={fare}
+          fareLoading={fareLoading}
+          fareError={fareError}
           selectVehicle={setVehicleType}
           setConfirmRidePanel={setConfirmRidePanel}
           setVehiclePanel={setVehiclePanel}

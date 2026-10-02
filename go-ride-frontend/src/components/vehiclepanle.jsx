@@ -8,6 +8,23 @@ const VehiclePanel = (props) => {
         }}></i></h5>
 
           <h3 className="text-2xl font-semibold mb-5">Choose a Vehicle</h3>
+
+          {props.fareLoading && (
+            <p className="mb-4 text-sm text-gray-600">Calculating fare and route...</p>
+          )}
+          {props.fareError && (
+            <p role="alert" className="mb-4 text-sm text-red-600">
+              {props.fareError}
+            </p>
+          )}
+          {Number.isFinite(props.fare.distance) && Number.isFinite(props.fare.duration) && (
+            <p className="mb-4 text-sm font-medium text-gray-700">
+              Trip distance: {props.fare.distance.toFixed(1)} km - {props.fare.duration} min
+            </p>
+          )}
+
+          {!props.fareLoading && !props.fareError && props.fare.car != null && (
+            <>
           
           <div onClick={()=>{
             props.setConfirmRidePanel(true);
@@ -50,6 +67,8 @@ const VehiclePanel = (props) => {
             </div>
               <h2 className="text-xl font-semibold">₹{props.fare.auto}</h2>
           </div>
+            </>
+          )}
       </div>
     );
   }

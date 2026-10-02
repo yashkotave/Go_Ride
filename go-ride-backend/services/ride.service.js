@@ -50,7 +50,11 @@ async function getFare(pickup, destination) {
     ),
   };
 
-  return fares;
+  return {
+    ...fares,
+    distance: distanceTime.distance,
+    duration: distanceTime.duration,
+  };
 }
 
 module.exports.getFare = getFare;

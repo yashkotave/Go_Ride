@@ -9,6 +9,7 @@ function initializeSocket(server) {
   io = socketIo(server, {
     cors: {
       origin: process.env.FRONTEND_URL, // Allow only your frontend
+      credentials: true,
       methods: ["GET", "POST"],
       allowedHeaders: ["Authorization", "Content-Type"]
       

@@ -203,7 +203,7 @@ const LiveTrackingCaptain = (props) => {
                   url: "https://cdn-icons-png.flaticon.com/512/4786/4786827.png",
                   scaledSize: new window.google.maps.Size(30, 30),
                 }
-              : {}
+              : undefined
           }
         />
       )}

@@ -51,6 +51,18 @@ const ConfirmRide = (props) => {
             </div>
           </div>
 
+          {Number.isFinite(props.fare.distance) && Number.isFinite(props.fare.duration) && (
+            <div className="flex items-center gap-5 p-3 border-b-2 border-gray-300">
+              <i className="text-lg ri-route-line"></i>
+              <div>
+                <h3 className="text-lg font-medium">Trip distance</h3>
+                <p className="text-sm -mt-1 text-gray-600">
+                  {props.fare.distance.toFixed(1)} km - {props.fare.duration} min
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-5 p-3 ">
           <i className="text-lg ri-currency-line"></i>
             <div className="">

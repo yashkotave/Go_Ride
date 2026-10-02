@@ -179,7 +179,7 @@ const LiveTrackingUser = (props) => {
           icon={
             (window.google &&
               props.ride?.captain?.location && {
-                path: google.maps.SymbolPath.CIRCLE,
+                path: window.google.maps.SymbolPath.CIRCLE,
                 scale: 10,
                 fillColor: "#4285F4",
                 fillOpacity: 1,
@@ -187,7 +187,7 @@ const LiveTrackingUser = (props) => {
                 strokeColor: "#4285F4",
                 strokeOpacity: 0.4,
               }) ||
-            {}
+            undefined
           }
         />
       )}
@@ -223,7 +223,7 @@ const LiveTrackingUser = (props) => {
                   url: "https://cdn-icons-png.flaticon.com/512/4786/4786827.png",
                   scaledSize: new window.google.maps.Size(30, 30),
                 }
-              : {}
+              : undefined
           }
         />
       )}
@@ -252,7 +252,7 @@ const LiveTrackingUser = (props) => {
             strokeWeight: 3,
             icons: [{
               icon: {
-                path: google.maps.SymbolPath.CIRCLE,
+                path: window.google.maps.SymbolPath.CIRCLE,
                 fillOpacity: 1,
                 scale: 3
               },
