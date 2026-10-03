@@ -6,6 +6,6 @@ const { initializeSocket } = require("./socket");
 const server = http.createServer(app);
 const io = initializeSocket(server); // initialize socket.io
 
-server.listen(port, () => {
+server.listen(port || 10000, () => {
   console.log(`Server is running on port ${port}`);
 });
